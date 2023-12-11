@@ -86,3 +86,22 @@ body {
 #popup.shown {
     visibility: visible;
 }
+
+.postHead {
+    font-weight: bold;
+}
+
+.likeButton {
+    background-color: white;
+    border-radius: 10px;
+    border-color: transparent;
+    color: red;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    margin: 10px;
+}
+
+.likeButton.liked {
+    background-color: red;
+    color: white;
+}

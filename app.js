@@ -158,18 +158,22 @@ app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
 
-function makeIntoPost(post) {
-    return "<div class=\"post\">" + post + "</div>\n"
+function makeIntoPost(post, author, postID) {
+    const postFooter = `<div class=\"postFoot\">
+    <button type="button" class="likeButton" onclick=\"toggleLike(this)\">Like</button>
+    </div>`
+    return "<div class=\"post\" id=\"" + postID + "\"><div class=\"postHead\">" + author + "</div>\n" + post + postFooter + "</div>\n"
 }
 
 function getAllPosts(directory) {
     const posts = [];
     const fileNames = fs.readdirSync(directory);
-
+    i = 0;
     fileNames.forEach(fileName => {
         try {
             const data = fs.readFileSync(directory + fileName, 'utf8');
-            posts.push(makeIntoPost(data));
+            posts.push(makeIntoPost(data, "You", i));
+            i++;
         } catch (err) {
             console.error('Error reading file:', err);
         }

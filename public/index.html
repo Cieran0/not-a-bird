@@ -37,6 +37,11 @@
             var popup = document.getElementById("popup");
             popup.classList.toggle('shown');
         }
+
+        function toggleLike(button) {
+            button.classList.toggle('liked');
+            console.log(button.parentNode.parentNode);
+        }
     </script>
 </body>
 
