@@ -129,3 +129,8 @@ dist
 .yarn/install-state.gz
 .pnp.*
 post_*
+db/Posts
+db/Users
+db/.vscode
+db/db
+db/commands.txt
