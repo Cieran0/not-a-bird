@@ -60,6 +60,8 @@ int main(int argc, char const *argv[])
         toggle_like_post(ARGS);
     } else if (command == "get-user") {
         get_user(ARGS);
+    } else if (command == "get-user-posts") {
+        get_user_posts(ARGS);
     } else {
         std::cout << "Invalid command!" << std::endl;
     }

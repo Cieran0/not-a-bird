@@ -199,3 +199,23 @@ void get_user(COMMAND_ARGS) {
     }
     std::cout << serializeUser(users[userID]);
 }
+
+void get_user_posts(COMMAND_ARGS) { 
+    loadPosts();
+    loadUsers();
+    if(argsCount != 1) {
+        return;
+    }
+    std::string username = argv[0];
+    hashedString userID = hash(username);
+    if(users.find(userID) == users.end()) {
+        return;
+    }
+    for (std::pair<hashedString,Post> pair : posts)
+    {
+        if(pair.second.authorID == userID) {
+            std::cout << pair.first << std::endl;
+        }
+    }
+    
+}

@@ -12,7 +12,7 @@ users = [{
     },
     {
         username: "user1",
-        password: "password1"
+        password: "password"
     }
 ];
 
@@ -70,6 +70,14 @@ app.get('/login', (req, res) => {
 
 app.get('/style.css', (req, res) => {
     res.sendFile(__dirname + '/public/style.css');
+});
+
+app.get('/red.svg', (req, res) => {
+    res.sendFile(__dirname + '/public/red.svg');
+});
+
+app.get('/white.svg', (req, res) => {
+    res.sendFile(__dirname + '/public/white.svg');
 });
 
 app.post('/login', (req, res) => {
@@ -150,7 +158,7 @@ app.post('/newPost', (req, res) => {
     const {
         postContent
     } = req.body;
-    newPost(postContent);
+    newPost(postContent, req.session.username, req.session.password);
     res.redirect('/');
 });
 
@@ -162,6 +170,27 @@ app.post('/likePost', (req, res) => {
     likePost(req.session.username, req.session.password, postID);
 });
 
+// Routes
+app.get('/profile', requireLogin, (req, res) => {
+    const {
+        user
+    } = req.query;
+    fs.readFile(__dirname + '/public/profile.html', 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+            res.status(500).send('Internal Server Error');
+        } else {
+            updatedHTML = data.replace('$NAME', user);
+            posts = getUsersPosts(user, req.session.username);
+            postsHTML = "";
+            for (let i = 0; i < posts.length; i++) {
+                postsHTML += posts[i];
+            }
+            updatedHTML = updatedHTML.replace('$POSTS', postsHTML);
+            res.send(updatedHTML);
+        }
+    });
+});
 
 // Redirect to login if the route doesn't match any defined routes
 app.use((req, res) => {
@@ -172,44 +201,79 @@ app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
 
-function makeIntoPost(content, author, postID, liked) {
+function makeIntoPost(content, author, postID, liked, likes) {
     likedString = liked ? "liked" : "";
-    const postFooter = `<div class=\"postFoot\">
-    <button type="button" class="likeButton $" onclick=\"toggleLike(this)\">Like</button>
-    </div>`.replace('$', likedString);
-    return "<div class=\"post\" id=\"" + postID + "\"><div class=\"postHead\">" + author + "</div>\n" + content.replaceAll("\n", "<br>") + postFooter + "</div>\n"
+    const postFooter = `<div class="postFoot">
+    <button type="button" class="likeButton ${likedString}" onclick="toggleLike(this)">${likes}</button>
+    </div>`;
+
+    // Encode HTML entities in the content
+    content = content
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("\'", "&apos;")
+        .replaceAll("\n", "<br>");
+
+    authorLink = "href=\"\/profile?user=" + author + "\"";
+
+    return `<div class="post" id="${postID}">
+                <div class="postHead">
+                   <a ${authorLink}>${author}</a>
+                </div>
+                ${content}
+                ${postFooter}
+            </div>`;
 }
 
-function getAllPosts(username, password) {
+
+function getAllPosts(username) {
     const posts = [];
     postIDs = runCommandAndGetOutput("db/db get-all-posts").split('\n');
-    likedPosts = getLikedPosts(username, password);
+    likedPosts = getLikedPosts(username);
     for (let i = 0; i < postIDs.length; i++) {
         if (postIDs[i] == "")
             continue;
-        postInfo = runCommandAndGetOutput("db/db get-post " + postIDs[i]);
-        postInfoSplit = postInfo.split('\n');
-        postAuthorID = postInfoSplit[1];
-        postTime = postInfoSplit[2];
-        postLikeCount = postInfoSplit[3];
-        postContent = "";
-        for (let i = 4; i < postInfoSplit.length; i++) {
-            postContent += postInfoSplit[i] + "\n";
-        }
-        liked = false;
-        for (let j = 0; j < likedPosts.length; j++) {
-            if (postIDs[i] == likedPosts[j]) {
-                liked = true;
-                break;
-            }
-        }
-        posts.push(makeIntoPost(postContent, getUsername(postAuthorID), postIDs[i], liked));
+        posts.push(getPost(postIDs[i], likedPosts));
     }
     return posts;
 }
 
-function newPost(postContent) {
-    console.log(runCommandAndGetOutput("db/db add-post cieran epic $\'" + postContent.replace('\r,\n') + "\'"));
+function getPost(postID, likedPosts) {
+    postInfo = runCommandAndGetOutput("db/db get-post " + postID);
+    postInfoSplit = postInfo.split('\n');
+    postAuthorID = postInfoSplit[1];
+    postTime = postInfoSplit[2];
+    postLikeCount = postInfoSplit[3];
+    postContent = "";
+    for (let i = 4; i < postInfoSplit.length; i++) {
+        postContent += postInfoSplit[i] + "\n";
+    }
+    liked = false;
+    for (let j = 0; j < likedPosts.length; j++) {
+        if (postID == likedPosts[j]) {
+            liked = true;
+            break;
+        }
+    }
+    return makeIntoPost(postContent, getUsername(postAuthorID), postID, liked, postLikeCount);
+}
+
+function getUsersPosts(profileUsername, username) {
+    const posts = [];
+    postIDs = runCommandAndGetOutput("db/db get-user-posts " + profileUsername).split('\n');
+    likedPosts = getLikedPosts(username);
+    for (let i = 0; i < postIDs.length; i++) {
+        if (postIDs[i] == "")
+            continue;
+        posts.push(getPost(postIDs[i], likedPosts));
+    }
+    return posts;
+}
+
+function newPost(postContent, username, password) {
+    console.log(runCommandAndGetOutput("db/db add-post " + username + " " + password + " $\'" + postContent.replace('\r,\n') + "\'"));
 }
 
 function runCommandAndGetOutput(command) {

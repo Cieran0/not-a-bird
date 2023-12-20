@@ -10,32 +10,19 @@
 <body>
 
     <div id="head">
-        <h1>$NAME</h1>
+        <h1>$NAME's Posts</h1>
         <form action="/logout" method="POST" id="buttons">
             <button type="submit">Sign Out</button>
-            <button id="newPost" type="button" onclick="togglePopup()">New Post</button>
+            <button id="home" type="button" onclick="goHome()">Home</button>
         </form>
-    </div>
-
-    <div id="popup">
-        <div id="postHead">
-            <h2>New Post</h2>
-        </div>
-        <form action="/newPost" method="POST" id="newPostForm">
-            <textarea form="newPostForm" id="postContent" name="postContent" rows="20" placeholder="Enter text..."></textarea>
-            <button type="submit" id="pushButton">Push</button>
-        </form>
-    </div>
     </div>
 
     <div id="posts">
         $POSTS
     </div>
     <script>
-        // When the user clicks on div, open the popup
-        function togglePopup() {
-            var popup = document.getElementById("popup");
-            popup.classList.toggle('shown');
+        function goHome() {
+            location.replace("/")
         }
 
         function toggleLike(button) {
