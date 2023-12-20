@@ -12,6 +12,7 @@ void login(COMMAND_ARGS) {
     std::string password = argv[1];
     if(!validUser(username,password)) {
         std::cout << "Fail" << std::endl;
+        return;
     }
     std::cout << "Success" << std::endl;
 }

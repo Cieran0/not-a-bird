@@ -26,7 +26,6 @@ hashedString hashPost(std::string content, hashedString authorID, hashedString t
 bool validUser(std::string username, std::string password){
     hashedString id = hash(username);
     if(users.find(id) == users.end()) {
-        std::cout << "Did't find user" << std::endl;
         return false;
     }
     if(users[id].passwordHashed != hash(password)) {

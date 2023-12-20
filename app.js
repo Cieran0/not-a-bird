@@ -6,16 +6,6 @@ const {
     execSync
 } = require('child_process');
 
-users = [{
-        username: "cieran",
-        password: "epic"
-    },
-    {
-        username: "user1",
-        password: "password"
-    }
-];
-
 app.use(express.urlencoded({
     extended: true
 }));
@@ -85,15 +75,8 @@ app.post('/login', (req, res) => {
         username,
         password
     } = req.body;
-    // Dummy authentication (replace this with your authentication logic)
-    foundUser = false;
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].username == username && users[i].password == password) {
-            foundUser = true;
-            break;
-        }
-    }
-    if (foundUser != "") {
+    loginResult = runCommandAndGetOutput("db/db login " + username + " " + password);
+    if (loginResult == "Success\n") {
         req.session.loggedIn = true;
         req.session.username = username;
         req.session.password = password;
@@ -120,26 +103,16 @@ app.post('/signup', (req, res) => {
         username,
         password
     };
-    foundUser = false;
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].username == username) {
-            foundUser = true;
-            break;
-        }
-    }
-    if (!foundUser) {
-        // Here, you might want to save the new user data to a database.
-        // For simplicity, we'll just display the user data.
-        // Redirect to the login page after signup (you can modify this behavior)
+    loginResult = runCommandAndGetOutput("db/db add-user " + username + " " + password);
+    if (loginResult == "Success\n") {
         req.session.loggedIn = true;
         req.session.username = username;
         req.session.password = password;
-        users.push(newUser);
-        console.log(users);
         res.redirect('/');
     } else {
-        res.send('Username already in use');
+        res.send('Invalid username or password');
     }
+
 });
 
 app.post('/logout', (req, res) => {
