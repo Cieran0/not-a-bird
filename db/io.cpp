@@ -38,7 +38,7 @@ Post readPostFromFile(const std::string& filename) {
         return post;
     }
 
-    if (!(file >> post.id >> post.authorID >> post.likeCount)) {
+    if (!(file >> post.id >> post.authorID >> post.timeSinceEpoc >> post.likeCount)) {
         std::cerr << "Error reading user data from file." << std::endl;
         // Handle the error, maybe return a default user or throw an exception
         return post;
@@ -105,11 +105,13 @@ void addUser(std::string username, std::string password) {
     users[id] = newUser;
 }
 
-void addPost(hashedString authorID, std::string content) {
-    hashedString id = hashPost(content,authorID);
+void addPost(hashedString authorID, std::string content, hashedString timeStamp) {
+    hashedString id = hashPost(content,authorID,timeStamp);
     Post newPost = {
         .id = id,
         .authorID = authorID,
+        .timeSinceEpoc = timeStamp,
+        .likeCount = 0,
         .content= content,
     };
     posts[id] = newPost;
@@ -130,6 +132,7 @@ void deletePost(hashedString id) {
 std::string serializePost(Post post) {
     std::string serializedString = std::to_string(post.id) + "\n" 
     + std::to_string(post.authorID) + "\n" 
+    + std::to_string(post.timeSinceEpoc) + "\n" 
     + std::to_string(post.likeCount) + "\n" 
     + post.content;
     return serializedString;
@@ -139,9 +142,9 @@ std::string serializeUser(User user) {
     std::string serializedString = std::to_string(user.id) + "\n" 
     + user.username + "\n" 
     + std::to_string(user.passwordHashed);
-    for (size_t i = 0; i < user.likedPosts.size(); i++)
+    for (hashedString &likedPost : user.likedPosts)
     {
-        serializedString += "\n" + std::to_string(user.likedPosts[i]);
+        serializedString += "\n" + std::to_string(likedPost);
     }
     return serializedString;
 }

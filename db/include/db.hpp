@@ -16,6 +16,7 @@ extern std::unordered_map<hashedString,Post> posts;
 
 hashedString parseHashedString(std::string str);
 hashedString hash(std::string stringToHash);
-hashedString hashPost(std::string content, hashedString authorID);
+hashedString hashPost(std::string content, hashedString authorID, hashedString timeStamp);
 bool validUser(std::string username, std::string password);
 bool endsWith(const std::string& fullString, const std::string& ending);
+unsigned long long timeSinceEpoch();

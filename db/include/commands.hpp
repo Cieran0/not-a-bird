@@ -1,10 +1,15 @@
 #pragma once
 #include <db.hpp>
 
-void login(int argsCount, char const *argv[]);
-void add_user(int argsCount, char const *argv[]);
-void add_post(int argsCount, char const *argv[]);
-void delete_user(int argsCount, char const *argv[]);
-void delete_post(int argsCount, char const *argv[]);
-void get_post_content(int argsCount, char const *argv[]);
-void get_all_posts(int argsCount, char const *argv[]);
+#define COMMAND_ARGS const int &argsCount, char const** &argv
+
+void login(COMMAND_ARGS);
+void add_user(COMMAND_ARGS);
+void add_post(COMMAND_ARGS);
+void delete_user(COMMAND_ARGS);
+void delete_post(COMMAND_ARGS);
+void get_post(COMMAND_ARGS);
+void get_all_posts(COMMAND_ARGS);
+void get_username(COMMAND_ARGS);
+void toggle_like_post(COMMAND_ARGS);
+void get_user(COMMAND_ARGS);

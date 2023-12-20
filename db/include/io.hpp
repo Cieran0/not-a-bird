@@ -7,7 +7,7 @@ std::vector<std::string> getAllFiles(const std::string& directoryPath);
 void loadUsers();
 void loadPosts();
 void addUser(std::string username, std::string password);
-void addPost(hashedString authorID, std::string content);
+void addPost(hashedString authorID, std::string content, hashedString timeStamp);
 void deleteUser(hashedString id);
 void deletePost(hashedString id);
 std::string serializePost(Post post);

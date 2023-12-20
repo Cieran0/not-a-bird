@@ -2,6 +2,9 @@ const express = require('express');
 const session = require('express-session');
 const fs = require('fs');
 const app = express();
+const {
+    execSync
+} = require('child_process');
 
 users = [{
         username: "cieran",
@@ -24,6 +27,8 @@ app.use(session({
     saveUninitialized: true
 }));
 
+app.use(express.json());
+
 // Middleware to check if user is logged in
 const requireLogin = (req, res, next) => {
     if (!req.session || !req.session.loggedIn) {
@@ -37,12 +42,10 @@ const requireLogin = (req, res, next) => {
     }
 };
 
-// Serve static files (HTML, CSS, JS)
-//app.use(express.static('public'));
 
 // Routes
 app.get('/', requireLogin, (req, res) => {
-    const username = req.session.username || 'User'; // Get the username from the session or set a default value
+    const username = req.session.username; // Get the username from the session or set a default value
     // Read the index.html file and replace $NAME with the actual username
     fs.readFile(__dirname + '/public/index.html', 'utf8', (err, data) => {
         if (err) {
@@ -50,7 +53,7 @@ app.get('/', requireLogin, (req, res) => {
             res.status(500).send('Internal Server Error');
         } else {
             updatedHTML = data.replace('$NAME', username);
-            posts = getAllPosts(__dirname + '/private/');
+            posts = getAllPosts(req.session.username);
             postsHTML = "";
             for (let i = 0; i < posts.length; i++) {
                 postsHTML += posts[i];
@@ -85,6 +88,7 @@ app.post('/login', (req, res) => {
     if (foundUser != "") {
         req.session.loggedIn = true;
         req.session.username = username;
+        req.session.password = password;
         res.redirect('/');
     } else {
         res.send('Invalid username or password');
@@ -121,6 +125,7 @@ app.post('/signup', (req, res) => {
         // Redirect to the login page after signup (you can modify this behavior)
         req.session.loggedIn = true;
         req.session.username = username;
+        req.session.password = password;
         users.push(newUser);
         console.log(users);
         res.redirect('/');
@@ -149,6 +154,15 @@ app.post('/newPost', (req, res) => {
     res.redirect('/');
 });
 
+app.post('/likePost', (req, res) => {
+    const {
+        postID
+    } = req.body;
+    res.send("Liked: " + postID);
+    likePost(req.session.username, req.session.password, postID);
+});
+
+
 // Redirect to login if the route doesn't match any defined routes
 app.use((req, res) => {
     res.redirect('/login');
@@ -158,36 +172,77 @@ app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
 
-function makeIntoPost(post, author, postID) {
+function makeIntoPost(content, author, postID, liked) {
+    likedString = liked ? "liked" : "";
     const postFooter = `<div class=\"postFoot\">
-    <button type="button" class="likeButton" onclick=\"toggleLike(this)\">Like</button>
-    </div>`
-    return "<div class=\"post\" id=\"" + postID + "\"><div class=\"postHead\">" + author + "</div>\n" + post + postFooter + "</div>\n"
+    <button type="button" class="likeButton $" onclick=\"toggleLike(this)\">Like</button>
+    </div>`.replace('$', likedString);
+    return "<div class=\"post\" id=\"" + postID + "\"><div class=\"postHead\">" + author + "</div>\n" + content.replaceAll("\n", "<br>") + postFooter + "</div>\n"
 }
 
-function getAllPosts(directory) {
+function getAllPosts(username, password) {
     const posts = [];
-    const fileNames = fs.readdirSync(directory);
-    i = 0;
-    fileNames.forEach(fileName => {
-        try {
-            const data = fs.readFileSync(directory + fileName, 'utf8');
-            posts.push(makeIntoPost(data, "You", i));
-            i++;
-        } catch (err) {
-            console.error('Error reading file:', err);
+    postIDs = runCommandAndGetOutput("db/db get-all-posts").split('\n');
+    likedPosts = getLikedPosts(username, password);
+    for (let i = 0; i < postIDs.length; i++) {
+        if (postIDs[i] == "")
+            continue;
+        postInfo = runCommandAndGetOutput("db/db get-post " + postIDs[i]);
+        postInfoSplit = postInfo.split('\n');
+        postAuthorID = postInfoSplit[1];
+        postTime = postInfoSplit[2];
+        postLikeCount = postInfoSplit[3];
+        postContent = "";
+        for (let i = 4; i < postInfoSplit.length; i++) {
+            postContent += postInfoSplit[i] + "\n";
         }
-    });
-
-    console.log(posts);
+        liked = false;
+        for (let j = 0; j < likedPosts.length; j++) {
+            if (postIDs[i] == likedPosts[j]) {
+                liked = true;
+                break;
+            }
+        }
+        posts.push(makeIntoPost(postContent, getUsername(postAuthorID), postIDs[i], liked));
+    }
     return posts;
 }
 
 function newPost(postContent) {
+    console.log(runCommandAndGetOutput("db/db add-post cieran epic $\'" + postContent.replace('\r,\n') + "\'"));
+}
+
+function runCommandAndGetOutput(command) {
     try {
-        fs.writeFileSync(__dirname + '/private/post_' + Math.floor(Math.random() * 10000) + '.txt', postContent);
-        // file written successfully
-    } catch (err) {
-        console.error(err);
+        const output = execSync(command, {
+            encoding: 'utf-8'
+        });
+        return output;
+    } catch (error) {
+        return `Error executing the command: ${error.message}`;
     }
+}
+
+const usernameCache = {};
+
+function getUsername(userID) {
+    const key = userID;
+    if (!usernameCache[key]) {
+        usernameCache[key] = runCommandAndGetOutput("db/db get-username " + userID);
+    }
+    return usernameCache[key];
+}
+
+function likePost(username, password, postID) {
+    output = runCommandAndGetOutput("db/db toggle-like-post " + username + " " + password + " " + postID);
+}
+
+function getLikedPosts(username) {
+    output = runCommandAndGetOutput("db/db get-user " + username);
+    userData = output.split('\n');
+    likedPosts = [];
+    for (let i = 3; i < userData.length; i++) {
+        likedPosts.push(userData[i])
+    }
+    return likedPosts;
 }

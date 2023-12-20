@@ -10,9 +10,9 @@ void printUser(User user) {
     std::cout << "\tusername: " << "\"" << user.username << "\"," << std::endl;
     std::cout << "\tpasswordHashed: " << "\"" << user.passwordHashed << "\"," << std::endl;
     std::cout << "\tlikedPosts: [" << std::endl;
-    for (size_t i = 0; i < user.likedPosts.size(); i++)
+    for (unsigned long long &likedPost :  user.likedPosts)
     {
-        std::cout << "\t\t" << user.likedPosts[i] << "," << std::endl;
+        std::cout << "\t\t" << likedPost << "," << std::endl;
     }
     
     std::cout << "\t]," << std::endl;
@@ -36,21 +36,32 @@ int main(int argc, char const *argv[])
     }
 
     std::string command = argv[1];
+    const int ARG_COUNT = argc - 2;
+    const char** ARG_VALUES = argv + 2;
+    #define ARGS ARG_COUNT, ARG_VALUES
 
     if(command == "login") {
-        login(argc-2, argv + 2);
+        login(ARGS);
     } else if (command == "add-user") {
-        add_user(argc-2, argv + 2);
+        add_user(ARGS);
     } else if (command == "add-post") {
-        add_post(argc-2, argv + 2);
+        add_post(ARGS);
     } else if (command == "delete-user") {
-        delete_user(argc-2, argv + 2);
+        delete_user(ARGS);
     } else if (command == "delete-post") {
-        delete_post(argc-2, argv + 2);
-    } else if (command == "get-post-content") {
-        get_post_content(argc-2, argv + 2);
+        delete_post(ARGS);
+    } else if (command == "get-post") {
+        get_post(ARGS);
     } else if (command == "get-all-posts") {
-        get_all_posts(argc-2, argv + 2);
+        get_all_posts(ARGS);
+    } else if (command == "get-username") {
+        get_username(ARGS);
+    } else if (command == "toggle-like-post") {
+        toggle_like_post(ARGS);
+    } else if (command == "get-user") {
+        get_user(ARGS);
+    } else {
+        std::cout << "Invalid command!" << std::endl;
     }
 
     return 0;

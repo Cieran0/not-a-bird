@@ -1,11 +1,12 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <list>
 
 struct User
 {
     unsigned long long id;
     std::string username;
     unsigned long long passwordHashed;
-    std::vector<unsigned long long> likedPosts;
+    std::list<unsigned long long> likedPosts;
 };

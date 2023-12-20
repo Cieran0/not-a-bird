@@ -40,7 +40,30 @@
 
         function toggleLike(button) {
             button.classList.toggle('liked');
-            console.log(button.parentNode.parentNode);
+            console.log(button.parentNode.parentNode.id);
+            const postData = {
+                postID: button.parentNode.parentNode.id // Replace 'YOUR_POST_ID_HERE' with the actual post ID
+            };
+
+            fetch('/likePost', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(postData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    console.log(data); // Log the response from the server
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         }
     </script>
 </body>
