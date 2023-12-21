@@ -10,7 +10,9 @@
 <body>
 
     <div id="head">
-        <h1>$NAME's Posts</h1>
+        <img id="pfp" src="$PFP">
+        <h1 id="username">$NAME</h1>
+        <p id="bio">$BIO</p>
         <form action="/logout" method="POST" id="buttons">
             <button type="submit">Sign Out</button>
             <button id="home" type="button" onclick="goHome()">Home</button>

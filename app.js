@@ -70,6 +70,10 @@ app.get('/white.svg', (req, res) => {
     res.sendFile(__dirname + '/public/white.svg');
 });
 
+app.get('/defaultPFP.png', (req, res) => {
+    res.sendFile(__dirname + '/public/defaultPFP.png');
+});
+
 app.post('/login', (req, res) => {
     const {
         username,
@@ -160,6 +164,9 @@ app.get('/profile', requireLogin, (req, res) => {
                 postsHTML += posts[i];
             }
             updatedHTML = updatedHTML.replace('$POSTS', postsHTML);
+            updatedHTML = updatedHTML.replace('$BIO', "Put bio here");
+            userData = getUserData(user);
+            updatedHTML = updatedHTML.replace('$PFP', userData.pfpLink);
             res.send(updatedHTML);
         }
     });
@@ -277,11 +284,6 @@ function likePost(username, password, postID) {
 function getUserData(username) {
     let serializedData = runCommandAndGetOutput("db/db get-user " + username);
     const userData = serializedData.split('\n');
-
-    if (userData.length < 6) {
-        console.error("Error: Incomplete user data.");
-        return null;
-    }
 
     LIKED_POSTS_NUMBER = parseInt(userData[4], 10);
     FOLLOWING_NUM_POS = LIKED_POSTS_NUMBER + 4 + 1;

@@ -15,7 +15,7 @@ body {
     padding: 0;
 }
 
-#head h1 {
+#home_name {
     color: white;
     padding-top: 1px;
     padding-bottom: 1px;
@@ -112,4 +112,26 @@ body {
 .likeButton.liked {
     background-image: url('red.svg');
     color: white;
+}
+
+#pfp {
+    object-fit: cover;
+    width: 10%;
+    height: 10%;
+    margin-left: 5%;
+    margin-top: 1%;
+    border-radius: 50%;
+    aspect-ratio: 1;
+}
+
+#username {
+    text-align: left;
+    margin-left: 5%;
+    margin-bottom: 0%;
+}
+
+#bio {
+    text-align: left;
+    margin-left: 5%;
+    margin-top: 0%;
 }
