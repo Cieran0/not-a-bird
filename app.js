@@ -204,7 +204,7 @@ function makeIntoPost(content, author, postID, liked, likes) {
 function getAllPosts(username) {
     const posts = [];
     postIDs = runCommandAndGetOutput("db/db get-all-posts").split('\n');
-    likedPosts = getLikedPosts(username);
+    likedPosts = getUserData(username).likedPosts;
     for (let i = 0; i < postIDs.length; i++) {
         if (postIDs[i] == "")
             continue;
@@ -236,7 +236,7 @@ function getPost(postID, likedPosts) {
 function getUsersPosts(profileUsername, username) {
     const posts = [];
     postIDs = runCommandAndGetOutput("db/db get-user-posts " + profileUsername).split('\n');
-    likedPosts = getLikedPosts(username);
+    likedPosts = getUserData(username).likedPosts;
     for (let i = 0; i < postIDs.length; i++) {
         if (postIDs[i] == "")
             continue;
@@ -274,12 +274,49 @@ function likePost(username, password, postID) {
     output = runCommandAndGetOutput("db/db toggle-like-post " + username + " " + password + " " + postID);
 }
 
-function getLikedPosts(username) {
-    output = runCommandAndGetOutput("db/db get-user " + username);
-    userData = output.split('\n');
-    likedPosts = [];
-    for (let i = 3; i < userData.length; i++) {
-        likedPosts.push(userData[i])
+function getUserData(username) {
+    let serializedData = runCommandAndGetOutput("db/db get-user " + username);
+    const userData = serializedData.split('\n');
+
+    if (userData.length < 6) {
+        console.error("Error: Incomplete user data.");
+        return null;
     }
-    return likedPosts;
+
+    LIKED_POSTS_NUMBER = parseInt(userData[4], 10);
+    FOLLOWING_NUM_POS = LIKED_POSTS_NUMBER + 4 + 1;
+    FOLL0WING_NUM = parseInt(userData[FOLLOWING_NUM_POS], 10);
+    console.log(userData[FOLLOWING_NUM_POS] + ": " + FOLL0WING_NUM);
+    FOLLOWER_NUM_POS = FOLLOWING_NUM_POS + FOLL0WING_NUM + 1;
+    FOLLOWER_NUM = parseInt(userData[FOLLOWER_NUM_POS], 10);
+    console.log(userData[FOLLOWER_NUM_POS] + ": " + FOLLOWER_NUM);
+
+    const user = {
+        id: parseInt(userData[0]),
+        username: userData[1],
+        passwordHashed: parseInt(userData[2]),
+        pfpLink: userData[3],
+        likedPostsNum: LIKED_POSTS_NUMBER,
+        likedPosts: [],
+        followingNum: FOLL0WING_NUM,
+        followingIDs: [],
+        followerNum: FOLLOWER_NUM,
+        followerIDs: []
+    };
+
+    for (let i = 5; i < FOLLOWING_NUM_POS; i++) {
+        user.likedPosts.push(userData[i]);
+    }
+
+    for (let i = FOLLOWING_NUM_POS + 1; i < FOLLOWER_NUM_POS; i++) {
+        user.followingIDs.push(userData[i]);
+    }
+
+    for (let i = FOLLOWER_NUM_POS + 1; i < userData.length; i++) {
+        user.followerIDs.push(userData[i]);
+    }
+    console.log(user);
+    //console.log(userData);
+
+    return user;
 }

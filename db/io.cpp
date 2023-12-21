@@ -10,8 +10,8 @@ User readUserFromFile(const std::string& filename) {
         return user;
     }
 
-    // Reading id, username, and passwordHashed
-    if (!(file >> user.id >> user.username >> user.passwordHashed)) {
+    // Reading id, username, passwordHashed, pfpLink, likedPostsNum
+    if (!(file >> user.id >> user.username >> user.passwordHashed >> user.pfpLink >> user.likedPostsNum)) {
         std::cerr << "Error reading user data from file." << std::endl;
         // Handle the error, maybe return a default user or throw an exception
         file.close();
@@ -20,13 +20,58 @@ User readUserFromFile(const std::string& filename) {
 
     // Read likedPosts if available
     unsigned long long likedPost;
-    while (file >> likedPost) {
+    for (unsigned long long i = 0; i < user.likedPostsNum; ++i) {
+        if (!(file >> likedPost)) {
+            std::cerr << "Error reading liked posts from file." << std::endl;
+            // Handle the error, maybe return a default user or throw an exception
+            file.close();
+            return user;
+        }
         user.likedPosts.push_back(likedPost);
+    }
+
+    // Reading followingNum and followingIDs
+    if (!(file >> user.followingNum)) {
+        std::cerr << "Error reading following number from file." << std::endl;
+        // Handle the error, maybe return a default user or throw an exception
+        file.close();
+        return user;
+    }
+
+    unsigned long long followingID;
+    for (unsigned long long i = 0; i < user.followingNum; ++i) {
+        if (!(file >> followingID)) {
+            std::cerr << "Error reading following IDs from file." << std::endl;
+            // Handle the error, maybe return a default user or throw an exception
+            file.close();
+            return user;
+        }
+        user.followingIDs.push_back(followingID);
+    }
+
+    // Reading followerNum and followerIDs
+    if (!(file >> user.followerNum)) {
+        std::cerr << "Error reading follower number from file." << std::endl;
+        // Handle the error, maybe return a default user or throw an exception
+        file.close();
+        return user;
+    }
+
+    unsigned long long followerID;
+    for (unsigned long long i = 0; i < user.followerNum; ++i) {
+        if (!(file >> followerID)) {
+            std::cerr << "Error reading follower IDs from file." << std::endl;
+            // Handle the error, maybe return a default user or throw an exception
+            file.close();
+            return user;
+        }
+        user.followerIDs.push_back(followerID);
     }
 
     file.close();
     return user;
 }
+
 
 Post readPostFromFile(const std::string& filename) {
     Post post;
@@ -101,6 +146,11 @@ void addUser(std::string username, std::string password) {
         .id = id,
         .username = username,
         .passwordHashed= passwordHashed,
+        .pfpLink="defaultPFP.png",
+
+        .likedPostsNum = 0,
+        .followingNum = 0,
+        .followerNum = 0,
     };
     users[id] = newUser;
 }
@@ -141,15 +191,30 @@ std::string serializePost(Post post) {
 std::string serializeUser(User user) {
     std::string serializedString = std::to_string(user.id) + "\n" 
     + user.username + "\n" 
-    + std::to_string(user.passwordHashed);
+    + std::to_string(user.passwordHashed) + '\n'
+    + user.pfpLink + '\n'
+    + std::to_string(user.likedPostsNum);
     for (hashedString &likedPost : user.likedPosts)
     {
         serializedString += "\n" + std::to_string(likedPost);
+    }
+    serializedString += "\n" + std::to_string(user.followingNum);
+    for (hashedString &followingID : user.followingIDs)
+    {
+        serializedString += "\n" + std::to_string(followingID);
+    }
+    serializedString += "\n" + std::to_string(user.followerNum);
+    for (hashedString &followergID : user.followerIDs)
+    {
+        serializedString += "\n" + std::to_string(followergID);
     }
     return serializedString;
 }
 
 int saveUser(User user) {
+    user.likedPostsNum = user.likedPosts.size();
+    user.followingNum = user.followingIDs.size();
+    user.followerNum = user.followerIDs.size();
     std::string filename = "Users/" + std::to_string(user.id);
     std::ofstream outputFile(filename);
 
