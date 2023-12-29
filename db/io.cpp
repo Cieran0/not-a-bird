@@ -42,6 +42,7 @@ User readUserFromFile(const std::string& filename) {
     for (unsigned long long i = 0; i < user.followingNum; ++i) {
         if (!(file >> followingID)) {
             std::cerr << "Error reading following IDs from file." << std::endl;
+            std::exit(1);
             // Handle the error, maybe return a default user or throw an exception
             file.close();
             return user;

@@ -50,7 +50,7 @@
                 postID: button.parentNode.parentNode.id // Replace 'YOUR_POST_ID_HERE' with the actual post ID
             };
 
-            fetch('/likePost', {
+            fetch('/toggleLike', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

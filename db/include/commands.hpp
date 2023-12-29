@@ -14,3 +14,4 @@ void get_username(COMMAND_ARGS);
 void toggle_like_post(COMMAND_ARGS);
 void get_user(COMMAND_ARGS);
 void get_user_posts(COMMAND_ARGS);
+void toggle_follow(COMMAND_ARGS);

@@ -141,7 +141,7 @@ void get_username(COMMAND_ARGS) {
     std::cout << users[userID].username;
 }
 
-void ToggleLikePost(hashedString userID, hashedString postID) {
+void toggleLikePost(hashedString userID, hashedString postID) {
     bool alreadyLiked = false;
     for(unsigned long long &likedID : users[userID].likedPosts) {
         if(likedID == postID) {
@@ -158,6 +158,26 @@ void ToggleLikePost(hashedString userID, hashedString postID) {
     }
     saveUser(users[userID]);
     savePost(posts[postID]);
+
+}
+
+void toggleFollow(hashedString userID, hashedString followID) {
+    bool alreadyFollowing = false;
+    for(unsigned long long &UserFollowID : users[userID].followingIDs) {
+        if(followID == UserFollowID) {
+            alreadyFollowing = true;
+            break;
+        }
+    }
+    if(!alreadyFollowing) {
+        users[userID].followingIDs.push_back(followID);
+        users[followID].followerIDs.push_back(userID);
+    } else {
+        users[userID].followingIDs.remove(followID);
+        users[followID].followerIDs.remove(userID);
+    }
+    saveUser(users[userID]);
+    saveUser(users[followID]);
 
 }
 
@@ -184,7 +204,7 @@ void toggle_like_post(COMMAND_ARGS) {
         return;
     }
     hashedString userID = hash(username);
-    ToggleLikePost(userID,postID);
+    toggleLikePost(userID,postID);
     std::cout << "Success" << std::endl;
 }
 
@@ -219,4 +239,30 @@ void get_user_posts(COMMAND_ARGS) {
         }
     }
     
+}
+
+void toggle_follow(COMMAND_ARGS) {
+    loadUsers();
+    if(argsCount != 3) {
+        std::cout << "Fail" << std::endl;
+        std::cout << "Wrong number of args" << std::endl;
+        return;
+    }
+    std::string username = argv[0];
+    std::string password = argv[1];
+    std::string followUsername = argv[2];
+    if(!validUser(username,password)) {
+        std::cout << "Fail" << std::endl;
+        std::cout << "Invalid user" << std::endl;
+        return; 
+    }
+    hashedString followID = hash(followUsername);
+    if(users.find(followID) == users.end()) {
+        std::cout << "Fail" << std::endl;
+        std::cout << "Invalid follow_user" << std::endl;
+        return;
+    }
+    hashedString userID = hash(username);
+    toggleFollow(userID,followID);
+    std::cout << "Success" << std::endl;
 }

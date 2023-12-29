@@ -139,12 +139,20 @@ app.post('/newPost', (req, res) => {
     res.redirect('/');
 });
 
-app.post('/likePost', (req, res) => {
+app.post('/toggleLike', (req, res) => {
     const {
         postID
     } = req.body;
     res.send("Liked: " + postID);
     likePost(req.session.username, req.session.password, postID);
+});
+
+app.post('/toggleFollow', (req, res) => {
+    const {
+        followUsername
+    } = req.body;
+    res.send("followed: " + followUsername);
+    toggleFollow(req.session.username, req.session.password, followUsername);
 });
 
 // Routes
@@ -166,6 +174,16 @@ app.get('/profile', requireLogin, (req, res) => {
             updatedHTML = updatedHTML.replace('$POSTS', postsHTML);
             updatedHTML = updatedHTML.replace('$BIO', "Put bio here");
             userData = getUserData(user);
+            following = getUserData(req.session.username).followingIDs;
+            followButtonTxt = "Follow";
+            for (let index = 0; index < following.length; index++) {
+                const element = following[index];
+                if (element == userData.id) {
+                    followButtonTxt = "Unfollow";
+                    break;
+                }
+            }
+            updatedHTML = updatedHTML.replace('$FOLLOW', followButtonTxt);
             updatedHTML = updatedHTML.replace('$PFP', userData.pfpLink);
             res.send(updatedHTML);
         }
@@ -253,7 +271,8 @@ function getUsersPosts(profileUsername, username) {
 }
 
 function newPost(postContent, username, password) {
-    console.log(runCommandAndGetOutput("db/db add-post " + username + " " + password + " $\'" + postContent.replace('\r,\n') + "\'"));
+    output = runCommandAndGetOutput("db/db add-post " + username + " " + password + " $\'" + postContent.replace('\r,\n') + "\'");
+    //console.log(output);
 }
 
 function runCommandAndGetOutput(command) {
@@ -281,6 +300,10 @@ function likePost(username, password, postID) {
     output = runCommandAndGetOutput("db/db toggle-like-post " + username + " " + password + " " + postID);
 }
 
+function toggleFollow(username, password, followUsername) {
+    output = runCommandAndGetOutput("db/db toggle-follow " + username + " " + password + " " + followUsername);
+}
+
 function getUserData(username) {
     let serializedData = runCommandAndGetOutput("db/db get-user " + username);
     const userData = serializedData.split('\n');
@@ -288,10 +311,10 @@ function getUserData(username) {
     LIKED_POSTS_NUMBER = parseInt(userData[4], 10);
     FOLLOWING_NUM_POS = LIKED_POSTS_NUMBER + 4 + 1;
     FOLL0WING_NUM = parseInt(userData[FOLLOWING_NUM_POS], 10);
-    console.log(userData[FOLLOWING_NUM_POS] + ": " + FOLL0WING_NUM);
+    //console.log(userData[FOLLOWING_NUM_POS] + ": " + FOLL0WING_NUM);
     FOLLOWER_NUM_POS = FOLLOWING_NUM_POS + FOLL0WING_NUM + 1;
     FOLLOWER_NUM = parseInt(userData[FOLLOWER_NUM_POS], 10);
-    console.log(userData[FOLLOWER_NUM_POS] + ": " + FOLLOWER_NUM);
+    //console.log(userData[FOLLOWER_NUM_POS] + ": " + FOLLOWER_NUM);
 
     const user = {
         id: parseInt(userData[0]),
@@ -317,7 +340,7 @@ function getUserData(username) {
     for (let i = FOLLOWER_NUM_POS + 1; i < userData.length; i++) {
         user.followerIDs.push(userData[i]);
     }
-    console.log(user);
+    //console.log(user);
     //console.log(userData);
 
     return user;

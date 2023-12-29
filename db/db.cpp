@@ -62,6 +62,8 @@ int main(int argc, char const *argv[])
         get_user(ARGS);
     } else if (command == "get-user-posts") {
         get_user_posts(ARGS);
+    } else if (command == "toggle-follow") {
+        toggle_follow(ARGS);
     } else {
         std::cout << "Invalid command!" << std::endl;
     }

@@ -15,6 +15,7 @@
         <p id="bio">$BIO</p>
         <form action="/logout" method="POST" id="buttons">
             <button type="submit">Sign Out</button>
+            <button id="home" type="button" onclick="toggleFollow(this)">$FOLLOW</button>
             <button id="home" type="button" onclick="goHome()">Home</button>
         </form>
     </div>
@@ -39,7 +40,34 @@
                 postID: button.parentNode.parentNode.id // Replace 'YOUR_POST_ID_HERE' with the actual post ID
             };
 
-            fetch('/likePost', {
+            fetch('/toggleLike', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(postData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    throw new Error('Network response was not ok.');
+                })
+                .then(data => {
+                    console.log(data); // Log the response from the server
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function toggleFollow(button) {
+            button.innerHTML = (button.innerHTML == "Unfollow") ? "Follow" : "Unfollow";
+            username = document.getElementById("username").innerHTML;
+            const postData = {
+                followUsername: username // Replace 'YOUR_POST_ID_HERE' with the actual post ID
+            };
+            fetch('/toggleFollow', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
